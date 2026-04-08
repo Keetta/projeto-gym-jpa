@@ -15,7 +15,7 @@ CREATE TABLE alunos (
     altura DECIMAL(5,2),
     peso DECIMAL(5,2),
 
-    endereco_id BIGINT UNIQUE NOT NULL,
+    endereco_id INT NOT NULL,
     CONSTRAINT fk_aluno_endereco
         FOREIGN KEY (endereco_id)
         REFERENCES enderecos(id)
@@ -43,7 +43,7 @@ CREATE TABLE treinos (
     nome VARCHAR(100) NOT NULL,
     descricao VARCHAR(500),
 
-    fk_treinador_id BIGINT,
+    fk_treinador_id INT,
     CONSTRAINT fk_treino_treinador
         FOREIGN KEY (fk_treinador_id)
         REFERENCES treinadores(id)
@@ -53,8 +53,8 @@ CREATE TABLE treinos (
 CREATE TABLE matriculas (
     id SERIAL PRIMARY KEY,
 
-    fk_aluno_id BIGINT NOT NULL,
-    fk_plano_id BIGINT NOT NULL,
+    fk_aluno_id INT NOT NULL,
+    fk_plano_id INT NOT NULL,
 
     data_inicio TIMESTAMP NOT NULL,
     data_fim TIMESTAMP,
@@ -73,7 +73,7 @@ CREATE TABLE matriculas (
 CREATE TABLE pagamentos (
     id SERIAL PRIMARY KEY,
 
-    fk_matricula_id BIGINT NOT NULL,
+    fk_matricula_id INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     data_pagamento TIMESTAMP,
     status VARCHAR(20) NOT NULL,
@@ -85,8 +85,8 @@ CREATE TABLE pagamentos (
 
 -- TABELA ALUNO_TREINO (N:N)
 CREATE TABLE aluno_treino (
-    aluno_id BIGINT NOT NULL,
-    treino_id BIGINT NOT NULL,
+    aluno_id INT NOT NULL,
+    treino_id INT NOT NULL,
 
     CONSTRAINT pk_aluno_treino
         PRIMARY KEY (aluno_id, treino_id),
