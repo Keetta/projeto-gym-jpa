@@ -6,7 +6,7 @@ CREATE TABLE enderecos (
     cidade VARCHAR(255) NOT NULL
 );
 
--- TABELA ALUNOS (1:1)
+-- TABELA ALUNOS (N:1)
 CREATE TABLE alunos (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
