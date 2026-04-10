@@ -3,13 +3,19 @@ package org.example.service;
 import jakarta.persistence.*;
 import java.util.List;
 import org.example.entity.AlunoEntity;
+import org.example.repository.AlunoRepository;
+import org.example.repository.EnderecoRepository;
 
 public class AlunoService {
 
-    private EntityManager entityManager;
+    private final AlunoRepository alunoRepository;
+    private final EnderecoRepository enderecoRepository;
+    private final EntityManager entityManager;
 
     public AlunoService(EntityManager entityManager) {
         this.entityManager = entityManager;
+        this.alunoRepository = new AlunoRepository(entityManager);
+        this.enderecoRepository = new EnderecoRepository(entityManager);
     }
 
     public AlunoEntity criarAluno(AlunoEntity aluno) {
@@ -24,11 +30,10 @@ public class AlunoService {
             if (aluno.getEndereco() == null) {
                 throw new RuntimeException("Endereço é obrigatório!");
             }
-            // Salvar Endereço
-            entityManager.persist(aluno.getEndereco());
-            // Salvar Aluno
-            entityManager.persist(aluno);
-
+            // Salvar endereço
+            enderecoRepository.salvar(aluno.getEndereco());
+            // Salvar aluno
+            alunoRepository.salvar(aluno);
             transaction.commit();
             return aluno;
         } catch (Exception e) {
@@ -38,34 +43,22 @@ public class AlunoService {
     }
 
     public AlunoEntity buscarAlunoPorId(Long id) {
-        AlunoEntity aluno = entityManager.find(AlunoEntity.class, id);
-
-        if (aluno == null) {
-            throw new RuntimeException("Aluno não foi encontrado!");
-        }
-        return aluno;
+        return alunoRepository.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Aluno não encontrado!"));
     }
 
     public List<AlunoEntity> listarAlunos() {
-        return entityManager
-                .createQuery("SELECT a FROM AlunoEntity a", AlunoEntity.class)
-                .getResultList();
+        return alunoRepository.listarTodos();
     }
 
     public AlunoEntity atualizarAluno(Long id, AlunoEntity dadosAtualizados) {
         EntityTransaction transaction = entityManager.getTransaction();
-
         try {
             transaction.begin();
 
-            // Buscar um aluno existente
-            AlunoEntity aluno = entityManager.find(AlunoEntity.class, id);
+            AlunoEntity aluno = alunoRepository.buscarPorId(id)
+                    .orElseThrow(() -> new RuntimeException("Aluno não encontrado!"));
 
-            if (aluno == null) {
-                throw new RuntimeException("Aluno não encontrado!");
-            }
-
-            // 🔹 Atualiza os dados com os setters
             aluno.setNome(dadosAtualizados.getNome());
             aluno.setIdade(dadosAtualizados.getIdade());
             aluno.setTelefone(dadosAtualizados.getTelefone());
@@ -76,10 +69,11 @@ public class AlunoService {
                 aluno.setEndereco(dadosAtualizados.getEndereco());
             }
 
-            // Finalmente o merge, sincronizando com o banco
-            AlunoEntity alunoAtualizado = entityManager.merge(aluno);
+            AlunoEntity atualizado = alunoRepository.salvar(aluno);
+
             transaction.commit();
-            return alunoAtualizado;
+            return atualizado;
+
         } catch (Exception e) {
             transaction.rollback();
             throw e;
@@ -88,20 +82,15 @@ public class AlunoService {
 
     public void deletarAluno(Long id) {
         EntityTransaction transaction = entityManager.getTransaction();
-
         try {
             transaction.begin();
 
-            // Buscar um aluno existente
-            AlunoEntity aluno = entityManager.find(AlunoEntity.class, id);
+            AlunoEntity aluno = alunoRepository.buscarPorId(id)
+                    .orElseThrow(() -> new RuntimeException("Aluno não encontrado!"));
 
-            if (aluno == null) {
-                throw new RuntimeException("Aluno não encontrado!");
-            }
-
-            // Deletar, deletar, deletar (do banco)
-            entityManager.remove(aluno);
+            alunoRepository.deletar(aluno);
             transaction.commit();
+
         } catch (Exception e) {
             transaction.rollback();
             throw e;
