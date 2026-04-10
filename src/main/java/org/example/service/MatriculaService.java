@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import org.example.entity.AlunoEntity;
 import org.example.entity.MatriculaEntity;
 import org.example.entity.PlanoEntity;
-
+import org.example.repository.MatriculaRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,9 +12,11 @@ public class MatriculaService {
 
     public MatriculaService(EntityManager entityManager) {
         this.entityManager = entityManager;
+        this.matriculaRepository = new MatriculaRepository(entityManager);
     }
 
     private EntityManager entityManager;
+    private MatriculaRepository matriculaRepository;
 
     private MatriculaEntity criarMatricula(AlunoEntity aluno, PlanoEntity plano) {
         MatriculaEntity m = new MatriculaEntity();
@@ -22,9 +24,7 @@ public class MatriculaService {
         m.setPlano(plano);
         m.setDataInicio(LocalDateTime.now());
         m.setStatus("ATIVA");
-
-        entityManager.persist(m);
-        return m;
+        return matriculaRepository.salvar(m);
     }
 
     public boolean alunoJaTemMatriculaAtiva(Long alunoId) {
@@ -39,11 +39,8 @@ public class MatriculaService {
     }
 
     public MatriculaEntity buscarPorId(Long id) {
-        MatriculaEntity m = entityManager.find(MatriculaEntity.class, id);
-        if (m == null) {
-            throw new RuntimeException("Matrícula não encontrada!");
-        }
-        return m;
+        return matriculaRepository.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Matrícula não encontrada!"));
     }
 
     public MatriculaEntity matricularAluno (Long alunoId, Long planoId) {
@@ -87,6 +84,7 @@ public class MatriculaService {
 
             matricula.setStatus("CANCELADA");
             matricula.setDataFim(LocalDateTime.now());
+            matriculaRepository.salvar(matricula);
             transaction.commit();
         } catch (Exception e) {
             transaction.rollback();
@@ -169,6 +167,7 @@ public class MatriculaService {
             // Encerra a matrícula atual
             atual.setStatus("CANCELADA");
             atual.setDataFim(LocalDateTime.now());
+            matriculaRepository.salvar(atual);
             // Cria nova matrícula com o MESMO plano
             MatriculaEntity nova =
                     criarMatricula(atual.getAluno(), atual.getPlano());
@@ -196,6 +195,7 @@ public class MatriculaService {
 
             for (MatriculaEntity m : matriculas) {
                 m.setStatus("INATIVA");
+                matriculaRepository.salvar(m);
             }
             transaction.commit();
         } catch (Exception e) {
@@ -205,11 +205,10 @@ public class MatriculaService {
     }
 
     public List<MatriculaEntity> listarMatriculasAtivas() {
-        String jpql = "SELECT m FROM MatriculaEntity m " +
-                "WHERE m.status = 'ATIVA'";
-
-        return entityManager.createQuery(jpql, MatriculaEntity.class)
-                .getResultList();
+        return entityManager.createQuery(
+                "SELECT m FROM MatriculaEntity m WHERE m.status = 'ATIVA'",
+                MatriculaEntity.class
+        ).getResultList();
     }
 
     public boolean matriculaEstaAtiva(Long matriculaId) {
