@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public class Main {
     public static void main(String[] args) {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("meuPU");
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("academiaPU");
         EntityManager em = emf.createEntityManager();
 
         // Todos os Services
