@@ -4,9 +4,25 @@ import jakarta.persistence.*;
 import org.example.entity.*;
 import org.example.service.*;
 import java.math.BigDecimal;
+import org.flywaydb.core.Flyway;
 
 public class Main {
     public static void main(String[] args) {
+
+        // 1. Configuração Robusta do Flyway
+        Flyway flyway = Flyway.configure()
+                .dataSource("jdbc:postgresql://localhost:5432/academia", "nick", "nicki12072007")
+                // Força o Flyway a olhar na pasta correta
+                .locations("classpath:db/migration")
+                // Se as tabelas já existirem, ele cria a flyway_schema_history sem dar erro
+                .baselineOnMigrate(true)
+                .load();
+
+        System.out.println("Iniciando migração do Flyway...");
+        flyway.migrate();
+        System.out.println("Flyway finalizado com sucesso!");
+
+        // 2. Início do JPA
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("academiaPU");
         EntityManager em = emf.createEntityManager();
 
@@ -17,6 +33,7 @@ public class Main {
         PagamentoService pagamentoService = new PagamentoService(em);
         TreinadorService treinadorService = new TreinadorService(em);
         TreinoService treinoService = new TreinoService(em);
+
         try {
             // Cria Plano
             PlanoEntity plano = new PlanoEntity();
@@ -42,9 +59,11 @@ public class Main {
             // Matricula o Aluno
             MatriculaEntity matricula = matriculaService
                     .matricularAluno(aluno.getId(), plano.getId());
+
             // Cria o Pagamento
             PagamentoEntity pagamento = pagamentoService
                     .criarPagamento(matricula.getId(), new BigDecimal("140.00"));
+
             // Registrando Pagamento
             pagamentoService.registrarPagamento(pagamento.getId());
 
@@ -62,11 +81,13 @@ public class Main {
             treinoService.criarTreino(treino, treinador.getId());
 
             System.out.println("✅ Sistema executado com sucesso!");
+
         } catch (Exception e) {
-            System.out.println("❌ Erro: " + e.getMessage());
+            System.err.println("❌ Erro durante a execução:");
+            e.printStackTrace(); // Usei printStackTrace para vermos o erro completo se der ruim
         } finally {
-            em.close();
-            emf.close();
+            if (em != null && em.isOpen()) em.close();
+            if (emf != null && emf.isOpen()) emf.close();
         }
     }
 }
