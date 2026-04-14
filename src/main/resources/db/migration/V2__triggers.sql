@@ -1,5 +1,5 @@
 -- LOG (AUDITORIA DE PAGAMENTOS)
-CREATE TABLE log_pagamentos (
+CREATE TABLE IF NOT EXISTS log_pagamentos (
                                 id SERIAL PRIMARY KEY,
                                 pagamento_id INT,
                                 valor DECIMAL(10,2),

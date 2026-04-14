@@ -3,6 +3,7 @@ package org.example.service;
 import jakarta.persistence.*;
 import java.util.List;
 import org.example.entity.AlunoEntity;
+import org.example.entity.EnderecoEntity;
 import org.example.repository.AlunoRepository;
 import org.example.repository.EnderecoRepository;
 
@@ -84,13 +85,16 @@ public class AlunoService {
         EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-
             AlunoEntity aluno = alunoRepository.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Aluno não encontrado!"));
 
+            EnderecoEntity endereco = aluno.getEndereco();
             alunoRepository.deletar(aluno);
-            transaction.commit();
 
+            entityManager.remove(entityManager.contains(endereco)
+                    ? endereco
+                    : entityManager.merge(endereco));
+            transaction.commit();
         } catch (Exception e) {
             transaction.rollback();
             throw e;
