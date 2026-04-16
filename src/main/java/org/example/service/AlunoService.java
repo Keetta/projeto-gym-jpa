@@ -87,13 +87,7 @@ public class AlunoService {
             transaction.begin();
             AlunoEntity aluno = alunoRepository.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Aluno não encontrado!"));
-
-            EnderecoEntity endereco = aluno.getEndereco();
             alunoRepository.deletar(aluno);
-
-            entityManager.remove(entityManager.contains(endereco)
-                    ? endereco
-                    : entityManager.merge(endereco));
             transaction.commit();
         } catch (Exception e) {
             transaction.rollback();

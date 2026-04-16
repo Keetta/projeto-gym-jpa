@@ -47,7 +47,7 @@ CREATE TRIGGER trg_bloquear_dupla_matricula
                          FOR EACH ROW
                          EXECUTE FUNCTION fn_bloquear_dupla_matricula();
 
--- AUTOMATIZANDO STATUS DE MATRÍCULA EXPIRADA
+-- TRIGGER DE AUTOMATIZAR STATUS DE MATRÍCULA EXPIRADA (não utilizada por enquanto!)
 CREATE OR REPLACE FUNCTION fn_finalizar_matricula()
 RETURNS TRIGGER AS $$
 BEGIN
